@@ -17,4 +17,6 @@ void join_thread(int id);
     Join All threads function
 */
 void join_all_threads();
+
+int getCurrentId(); 
 #endif

@@ -2,6 +2,8 @@
 #include <unordered_map>
 #include <unistd.h>
 #include <sys/types.h>
+#include <stdlib.h>
+#include <time.h>
 
 std::unordered_map<int, pthread_t> threads; 
 int id = 0;
@@ -10,7 +12,7 @@ int id = 0;
     CPU to schedule the thread on.
 */
 int get_cpu_num() {
-    return 1; 
+    return rand() % 8; 
 }
 
 /*
@@ -18,6 +20,7 @@ int get_cpu_num() {
 */
     int thread_create(void *(*start_routine)(void *), void *arg)
 {
+	srand(time(NULL));
     cpu_set_t mask; 
     CPU_ZERO(&mask);
     CPU_SET(get_cpu_num(), &mask);
@@ -50,4 +53,9 @@ void join_thread(int id) {
 */
 void join_all_threads() {
     // nope
+}
+
+// Self ID of thread. 
+int getCurrentId() {
+    return id - 1; 
 }
