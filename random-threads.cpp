@@ -12,7 +12,8 @@ int id = 0;
     CPU to schedule the thread on.
 */
 int get_cpu_num() {
-    return rand() % 8; 
+    return rand() % 2; 
+    
 }
 
 /*
