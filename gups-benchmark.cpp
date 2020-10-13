@@ -13,7 +13,7 @@ int get_next_index(int i, int size) {
 
 void gups() {
 
-    int size = 409600;
+    int size = 4096000;
     int *field = (int *) malloc(size);
     
     
@@ -21,7 +21,7 @@ void gups() {
     int data; 
     unsigned long i; 
     unsigned long long index; 
-    unsigned long iters = 1000000;
+    unsigned long iters = 10000000;
     size = 8;
     for(int i = 0; i < iters; i++) {
         
