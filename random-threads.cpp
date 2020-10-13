@@ -12,8 +12,9 @@ int id = 0;
     CPU to schedule the thread on.
 */
 int get_cpu_num() {
-    return rand() % 2; 
-    
+    return 0;
+    // unsigned int a = static_cast<unsigned int>(time(NULL));
+    // return rand_r(&a) % 4;
 }
 
 /*
