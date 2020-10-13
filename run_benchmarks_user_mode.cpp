@@ -12,7 +12,7 @@ typedef std::chrono::high_resolution_clock Clock;
 extern void create_workload(list<int>& workload);
 extern void gups();
 extern unsigned int ackermann(unsigned int m, unsigned int n);
-extern void foo();
+extern int foo();
 extern int getCurrentID();
 
 class workloadUnit {

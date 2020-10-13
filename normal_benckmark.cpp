@@ -8,19 +8,25 @@
 
 using namespace std;
 
+int n = 100000;
 std::unordered_map<std::thread::id, double> thread_times;
 
-void foo() {
+int foo() {
     
-    int i;
-    unsigned int out = 0;
+    int arr[n];
+
     unsigned int a = static_cast<unsigned int>(time(NULL));
-    
-    for (i = 0; i < 1000; i++)
+    unsigned long out = 0;
+
+    for(int i = 0; i < n; i++) 
+        arr[i] = rand_r(&a);
+
+    for (int i = 0; i < n; i++)
     {
         // something
-        out += rand_r(&a);
+        out += arr[i];
     }
-    printf("%d\n", out);
+    
+    return out;
     
 }
