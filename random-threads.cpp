@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <time.h>
+#include <iostream>
 
 std::unordered_map<int, pthread_t> threads; 
 int id = 0;
@@ -12,9 +13,9 @@ int id = 0;
     CPU to schedule the thread on.
 */
 int get_cpu_num() {
-    return 0;
-    // unsigned int a = static_cast<unsigned int>(time(NULL));
-    // return rand_r(&a) % 4;
+    // return 0;
+    unsigned int a = static_cast<unsigned int>(id);
+    return rand_r(&a) % 2;
 }
 
 /*
@@ -25,14 +26,16 @@ int get_cpu_num() {
 	srand(time(NULL));
     cpu_set_t mask; 
     CPU_ZERO(&mask);
-    CPU_SET(get_cpu_num(), &mask);
+    int cpu = get_cpu_num();
+    std::cout << cpu << std::endl;
+    CPU_SET(cpu, &mask);
     pthread_t thread;
     int a = pthread_create(&thread, NULL, start_routine, arg);
     
-    if(a == 0) {
-        pthread_setaffinity_np(thread, sizeof(mask), &mask);
-        threads.insert(std::make_pair(id, thread));
-    }
+    
+    pthread_setaffinity_np(thread, sizeof(mask), &mask);
+    threads.insert(std::make_pair(id, thread));
+    
 
     return id++;
 }
