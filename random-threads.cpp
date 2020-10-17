@@ -15,7 +15,7 @@ int id = 0;
 int get_cpu_num() {
     // return 0;
     unsigned int a = static_cast<unsigned int>(id);
-    return rand_r(&a) % 16;
+    return rand_r(&a) % 1;
 }
 
 /*
@@ -27,7 +27,7 @@ int get_cpu_num() {
     cpu_set_t mask; 
     CPU_ZERO(&mask);
     int cpu = get_cpu_num();
-    std::cout << cpu << std::endl;
+    // std::cout << cpu << std::endl;
     CPU_SET(cpu, &mask);
     pthread_t thread;
     int a = pthread_create(&thread, NULL, start_routine, arg);

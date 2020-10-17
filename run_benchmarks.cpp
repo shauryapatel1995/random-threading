@@ -70,12 +70,13 @@ int main(int argc, char** argv)
     cout << "Random workload of size " << workload.size() << " created\n";
     auto t1 = Clock::now();    
     // Run this workload
-    cout << "Running workload" << std::endl;
+    cout << "Running workload " << std::endl;
     list<thread> threads;
-    for (int i = 0; i < 100; i++)
+    int size = workload.size();
+    for (int i = 0; i < size; i++)
     {
         int work = workload.front();
-	    threads.push_back(std::thread(run_benchmark, work));
+	threads.push_back(std::thread(run_benchmark, work));
         workload.pop_front();
     }
 
@@ -83,12 +84,12 @@ int main(int argc, char** argv)
         t.join();
 
     
+    auto t2 = Clock::now();
     cout << "Printing time taken : \n";
     for (auto i : runtimes)
     {
         cout << i.second->getFunc() << " " << i.second->getTime() << "\n";
     }
 
-    auto t2 = Clock::now();
     cout << "Total time taken: " << chrono::duration_cast<chrono::milliseconds>(t2 - t1).count() << "\n";
 }

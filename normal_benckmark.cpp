@@ -8,7 +8,7 @@
 
 using namespace std;
 
-int n = 100000;
+int n = 500000;
 std::unordered_map<std::thread::id, double> thread_times;
 
 int foo() {

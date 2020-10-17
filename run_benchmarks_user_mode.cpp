@@ -68,7 +68,6 @@ int main(int argc, char** argv)
 {
     // Load workload file
     
-    auto t1 = Clock::now();
     list<int> workload;
     // create_workload(workload);
     char* file = argv[1];
@@ -80,28 +79,33 @@ int main(int argc, char** argv)
     // Run this workload
     cout << "Running workload" << std::endl;
     list<int> threads;
-    for (int i = 0; i < 100; i++)
+    
+    auto t1 = Clock::now();
+    int size = workload.size();
+    for (int i = 0; i < size; i++)
     {
         int work = workload.front();
         int thread_id = thread_create(run_benchmark, work);
         threads.push_back(thread_id);
+	cout << "2" << endl; 
         workload.pop_front();
     }
 
     //joinAllThreads();
     for(auto t : threads) {
+	cout << "1" << endl;
         join_thread(t);
     }
         
     // std::this_thread::sleep_for(10s);
     
+    auto t2 = Clock::now();
     cout << "\nPrinting time taken : \n";
     for (auto i : runtimes)
     {
         cout << i.second->getFunc() << " " << i.second->getTime() << "\n";
     }
 
-    auto t2 = Clock::now();
     cout << "Total time taken is: " << chrono::duration_cast<chrono::milliseconds>(t2 - t1).count();
     
 }
