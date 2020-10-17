@@ -14,8 +14,8 @@ int id = 0;
 */
 int get_cpu_num() {
     // return 0;
-    unsigned int a = static_cast<unsigned int>(id);
-    return rand_r(&a) % 1;
+    unsigned int a = static_cast<unsigned int>(time(NULL) + id);
+    return rand_r(&a) % 4;
 }
 
 /*
