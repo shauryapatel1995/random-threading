@@ -26,7 +26,7 @@ int foo() {
         // something
         out += arr[i];
     }
-    
+   	
     return out;
     
 }

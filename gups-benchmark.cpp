@@ -7,7 +7,7 @@ typedef std::chrono::high_resolution_clock Clock;
 using namespace std; 
 
 int get_next_index(int i, int size) {
-    unsigned int time = (unsigned int)std::time(nullptr);
+    unsigned int time = i;
     return rand_r(&time) % size;
 }
 
@@ -31,6 +31,7 @@ void gups() {
         field[index] = data;
     }
     
+    free(field); 
     
 }
 
