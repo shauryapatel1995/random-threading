@@ -87,13 +87,11 @@ int main(int argc, char** argv)
         int work = workload.front();
         int thread_id = thread_create(run_benchmark, work);
         threads.push_back(thread_id);
-	cout << "2" << endl; 
         workload.pop_front();
     }
 
     //joinAllThreads();
     for(auto t : threads) {
-	cout << "1" << endl;
         join_thread(t);
     }
         

@@ -48,6 +48,7 @@ void run_benchmark(int func_num) {
     auto t2 = Clock::now();
     workloadUnit *work = new workloadUnit(func_num, chrono::duration_cast<chrono::milliseconds>(t2 - t1).count());
     runtimes.insert(pair<thread::id, workloadUnit *>(this_thread::get_id(), work));
+    return; 
 }
 
 void read_workload(list<int>& workload, char* file) {
