@@ -10,7 +10,7 @@ using namespace std;
 typedef std::chrono::high_resolution_clock Clock;
 
 extern void create_workload(list<int>& workload);
-extern void gups();
+extern void gups(int size);
 extern unsigned int ackermann(unsigned int m, unsigned int n);
 extern int foo();
 extern int getCurrentID();
@@ -18,11 +18,13 @@ extern int getCurrentID();
 class workloadUnit {
     int func_name; 
     double time_taken;
+    int cpu_num;
 
     public :
-    workloadUnit(int func, double time) {
+    workloadUnit(int func, double time, int cpu) {
         this->func_name = func;
         this->time_taken = time;
+	this->cpu_num = cpu;
     }
 
     int getFunc() {
@@ -32,26 +34,34 @@ class workloadUnit {
     double getTime() {
         return this->time_taken;
     }
+   
+    int getCpu() {
+	return this->cpu_num;
+    }
 };
 
 unordered_map<int, workloadUnit *> runtimes;
 
 
-void run_benchmark(int func_num) {
-    
+void run_benchmark(int * args) {
+    int func_num = args[0];
+    int size = args[1];
     auto t1 = Clock::now();
-
+    // cout << "t1 " << std::chrono::system_clock::to_time_t(t1) << endl;
+    // cout << "Function is " << func_num << endl;
+    // cout << "Size of memory is " << size << endl;
     if(func_num == 1) {
         foo();
     } else if(func_num == 2) {
-        gups();
+        gups(size);
     } else {
         ackermann(rand() % 4, rand() % 10);
     }
     auto t2 = Clock::now();
-    workloadUnit *work = new workloadUnit(func_num, chrono::duration_cast<chrono::milliseconds>(t2 - t1).count());
+    // cout << "t2 " << std::chrono::system_clock::to_time_t(t2) << endl;
+	
+    workloadUnit *work = new workloadUnit(func_num, chrono::duration_cast<chrono::milliseconds>(t2 - t1).count(), get_cpu(pthread_self()));
     runtimes.insert(pair<int, workloadUnit *>(pthread_self(), work));
-    
 }
 
 
@@ -71,6 +81,8 @@ int main(int argc, char** argv)
     list<int> workload;
     // create_workload(workload);
     char* file = argv[1];
+    int size_mem = atoi(argv[2]);
+    cout << "Size is: " << size_mem << endl;
     //create_workload(workload);
     read_workload(workload, file);
 
@@ -85,7 +97,10 @@ int main(int argc, char** argv)
     for (int i = 0; i < size; i++)
     {
         int work = workload.front();
-        int thread_id = thread_create(run_benchmark, work);
+	int * args = (int *) malloc(sizeof(int)*2);
+	args[0] = work;
+	args[1] = size_mem;	
+        int thread_id = thread_create(run_benchmark, (void *) args);
         threads.push_back(thread_id);
         workload.pop_front();
     }
@@ -101,7 +116,7 @@ int main(int argc, char** argv)
     cout << "\nPrinting time taken : \n";
     for (auto i : runtimes)
     {
-        cout << i.second->getFunc() << " " << i.second->getTime() << "\n";
+        cout << i.first << " " << i.second->getFunc() << " " << i.second->getTime()  << " " << i.second->getCpu() << "\n";
     }
 
     cout << "Total time taken is: " << chrono::duration_cast<chrono::milliseconds>(t2 - t1).count();

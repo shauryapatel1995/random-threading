@@ -6,7 +6,8 @@
 #include <time.h>
 #include <iostream>
 
-std::unordered_map<int, pthread_t> threads; 
+std::unordered_map<int, pthread_t> threads;
+std::unordered_map<int, int> cpus; 
 int id = 0;
 
 /*
@@ -15,7 +16,7 @@ int id = 0;
 int get_cpu_num() {
     // return 0;
     unsigned int a = static_cast<unsigned int>(time(NULL) + id);
-    return rand_r(&a) % 4;
+    return rand_r(&a) % 1;
 }
 
 /*
@@ -27,7 +28,7 @@ int get_cpu_num() {
     cpu_set_t mask; 
     CPU_ZERO(&mask);
     int cpu = get_cpu_num();
-    std::cout << cpu << std::endl;
+    // std::cout << cpu << std::endl;
     CPU_SET(cpu, &mask);
     pthread_t thread;
     int a = pthread_create(&thread, NULL, start_routine, arg);
@@ -35,7 +36,7 @@ int get_cpu_num() {
     
     pthread_setaffinity_np(thread, sizeof(mask), &mask);
     threads.insert(std::make_pair(id, thread));
-    
+    cpus.insert(std::make_pair(thread, cpu));
 
     return id++;
 }
@@ -51,6 +52,10 @@ void join_thread(int id) {
     pthread_t t = threads.at(id);
     pthread_join(t, nullptr);
     threads.erase(id);
+}
+
+int get_cpu(int id) {
+	return cpus.at(id);
 }
 
 /*

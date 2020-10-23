@@ -3,42 +3,56 @@
 #include <chrono>
 #include <ctime>
 #include <unistd.h>
+#include <random>
+#include <boost/math/distributions/pareto.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/variate_generator.hpp>
+
 typedef std::chrono::high_resolution_clock Clock;
 
 using namespace std; 
 
-unsigned long long get_next_index(int i, int size) {
-    unsigned int a = static_cast<unsigned int>(time(NULL) + pthread_self() + i);
-    return rand_r(&a) % size;
+
+unsigned long long get_next_index(int i, int size, std::uniform_int_distribution<int> distr, std::mt19937 generator) {
+    return distr(generator);
 }
 
-void gups() {
+int gups(int size) {
 
-    int size = 46080000;
     int * field = (int *) malloc(sizeof(int)*size);
-    
-    
-    
+	std::random_device                  rand_dev;
+	std::mt19937                        generator(rand_dev());
+	std::uniform_int_distribution<>  distr(1, size);    
+	boost::math::pareto_distribution<> dist(1,1);    
+	// boost::variate_generator<boost::mt19937&,boost::random::uniform_int_distribution<> > generator(randGen, dist);
+//    cout << "Created distribution of size " << size << endl; 
+
     int data; 
     unsigned long i; 
     unsigned long long index; 
-    unsigned long iters = 10000000;
+    unsigned long iters = 10000;
 	
     
     for(int i = 0; i < iters; i++) {
     	    
-        index = get_next_index(i, size);
+        //index = distr(generator);
+	
+	double val = boost::math::cdf(complement(dist,distr(generator)));
+	index = (int)(val * size);
+	// cout << index << endl;
 
 	if(index > size) {
 		cout << index << " " << size << endl;
 	}
+//	cout << index << endl;
         data = field[index];
         data += iters;
         field[index] = data;
     }
   
     free(field); 
-    
+    return data;     
 }
 
 // int main() {

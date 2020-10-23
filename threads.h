@@ -18,5 +18,7 @@ void join_thread(int id);
 */
 void join_all_threads();
 
-int getCurrentId(); 
+int getCurrentId();
+
+int get_cpu(int id); 
 #endif
