@@ -10,11 +10,12 @@ using namespace std;
 typedef std::chrono::high_resolution_clock Clock;
 
 extern void create_workload(list<int>& workload);
-extern void gups(int size);
+extern int gups(int size);
 extern unsigned int ackermann(unsigned int m, unsigned int n);
 extern int foo();
 extern int getCurrentID();
-
+extern void update_distributions(int);
+extern int gups_pareto(int);
 class workloadUnit {
     int func_name; 
     double time_taken;
@@ -42,7 +43,6 @@ class workloadUnit {
 
 unordered_map<int, workloadUnit *> runtimes;
 
-
 void run_benchmark(int * args) {
     int func_num = args[0];
     int size = args[1];
@@ -51,9 +51,13 @@ void run_benchmark(int * args) {
     // cout << "Function is " << func_num << endl;
     // cout << "Size of memory is " << size << endl;
     if(func_num == 1) {
-        foo();
+	foo();
     } else if(func_num == 2) {
+	cout << "gups" << endl;
         gups(size);
+    } else if(func_num == 3) {
+	cout << "pareto" << endl;
+	gups_pareto(size);
     } else {
         ackermann(rand() % 4, rand() % 10);
     }
@@ -84,6 +88,7 @@ int main(int argc, char** argv)
     int size_mem = atoi(argv[2]);
     cout << "Size is: " << size_mem << endl;
     //create_workload(workload);
+for(int i = 0; i < 100; i++) {
     read_workload(workload, file);
 
     cout << "Random workload of size " << workload.size() << " created\n";
@@ -92,7 +97,7 @@ int main(int argc, char** argv)
     cout << "Running workload" << std::endl;
     list<int> threads;
     
-    auto t1 = Clock::now();
+    auto time1 = Clock::now();
     int size = workload.size();
     for (int i = 0; i < size; i++)
     {
@@ -112,13 +117,16 @@ int main(int argc, char** argv)
         
     // std::this_thread::sleep_for(10s);
     
-    auto t2 = Clock::now();
+    auto time2 = Clock::now();
     cout << "\nPrinting time taken : \n";
     for (auto i : runtimes)
     {
         cout << i.first << " " << i.second->getFunc() << " " << i.second->getTime()  << " " << i.second->getCpu() << "\n";
     }
-
-    cout << "Total time taken is: " << chrono::duration_cast<chrono::milliseconds>(t2 - t1).count();
-    
+    // delete(&runtimes);	
+    // runtimes = unordered_map<int, workloadUnit *>();
+    runtimes.clear();
+    cout << "Total time taken is: " << chrono::duration_cast<chrono::milliseconds>(time2 - time1).count() << endl;
+    update_distributions( chrono::duration_cast<chrono::milliseconds>(time2 - time1).count());
+}
 }

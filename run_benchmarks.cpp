@@ -9,7 +9,7 @@ using namespace std;
 typedef std::chrono::high_resolution_clock Clock;
 
 // extern void create_workload(list<int>& workload);
-extern void gups();
+extern void gups(int);
 extern unsigned int ackermann(unsigned int m, unsigned int n);
 extern void foo();
 
@@ -41,7 +41,7 @@ void run_benchmark(int func_num) {
     if(func_num == 1) {
         foo();
     } else if(func_num == 2) {
-        gups();
+        gups(100000);
     } else {
         ackermann(rand() % 4, rand() % 10);
     }

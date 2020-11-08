@@ -14,11 +14,11 @@ typedef std::chrono::high_resolution_clock Clock;
 using namespace std; 
 
 
-/*unsigned long long get_next_index(int i, int size, std::uniform_int_distribution<int> distr, std::mt19937 generator) {
+unsigned long long get_next_index(int i, int size, std::uniform_int_distribution<int> distr, std::mt19937 generator) {
     return distr(generator);
-}*/
+}
 
-int gups(int size) {
+int gups_pareto(int size) {
 
     int * field = (int *) malloc(sizeof(int)*size);
 	std::random_device                  rand_dev;
@@ -36,10 +36,10 @@ int gups(int size) {
     
     for(int i = 0; i < iters; i++) {
     	    
-        index = distr(generator);
-	// cout << index << endl;	
-	//double val = boost::math::cdf(complement(dist,distr(generator)));
-	//index = (int)(val * size);
+        // index = distr(generator);
+	
+	double val = boost::math::cdf(complement(dist,distr(generator)));
+	index = (int)(val * size);
 	// cout << index << endl;
 
 	if(index > size) {

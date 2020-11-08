@@ -5,18 +5,41 @@
 #include <stdlib.h>
 #include <time.h>
 #include <iostream>
+#include <random>
 
 std::unordered_map<int, pthread_t> threads;
 std::unordered_map<int, int> cpus; 
 int id = 0;
 
 /*
+    Needs to perform Thompson sampling.
+    Lets focus on how to implement that. 
+*/
+
+std::default_random_engine generator;
+  std::normal_distribution<double> same(1,1);
+std::normal_distribution<double> different(1,1);
+int curr_cpu = 0;
+int curr_mode = 1;
+int num_trials_same = 0; 
+int num_trials_diff = 0;
+
+/*
     CPU to schedule the thread on.
 */
 int get_cpu_num() {
     // return 0;
-    unsigned int a = static_cast<unsigned int>(time(NULL) + id);
-    return rand_r(&a) % 1;
+    // unsigned int a = static_cast<unsigned int>(time(NULL) + id);
+    // return rand_r(&a) % 1;
+    // Here instead of random we sample from posteriors.
+    if(curr_mode == 0) {
+	// same cpu 
+	return curr_cpu;
+    } else {
+	// Different cpus. 
+	curr_cpu++;
+	return curr_cpu;
+    }
 }
 
 /*
@@ -28,7 +51,7 @@ int get_cpu_num() {
     cpu_set_t mask; 
     CPU_ZERO(&mask);
     int cpu = get_cpu_num();
-    // std::cout << cpu << std::endl;
+    std::cout << "CPU is: " << cpu << std::endl;
     CPU_SET(cpu, &mask);
     pthread_t thread;
     int a = pthread_create(&thread, NULL, start_routine, arg);
@@ -68,4 +91,37 @@ void join_all_threads() {
 // Self ID of thread. 
 int getCurrentId() {
     return id - 1; 
+}
+
+void update_distributions(int total_time) {
+	std::cout << "Current number of trials: " << num_trials_same << " " << num_trials_diff << std::endl;
+	std::cout << "Current distribution means: " << same.mean() << " " << different.mean() << std::endl;
+	if(curr_mode == 0) {
+		num_trials_same++;
+		// Update first.
+		double mean = same.mean();
+		mean = (double)(mean*(num_trials_same -1) + ((double)10/total_time))/(num_trials_same);
+		std::cout << "Mean is " << mean << std::endl;
+		same =  std::normal_distribution<double>(mean, (double)1/num_trials_same); 
+	} else {
+		// Update second.
+		num_trials_diff++;
+		double mean = different.mean();
+		
+		mean = (double)(mean*(num_trials_diff -1) + ((double)1/total_time))/(num_trials_diff);
+		different = std::normal_distribution<double>(mean, (double)1/num_trials_diff);	
+	}
+
+	// Update the curr mode and cpus.
+	curr_cpu = 0;
+	double num1 = same(generator);
+	double num2 = different(generator);
+	std::cout << num1 << " " << num2 << std::endl;
+	if(num1 > num2) {
+		curr_mode = 0;
+	} else {
+		curr_mode = 1; 
+	}
+	 
+	std::cout <<  "Current mode: " << curr_mode <<std::endl;
 }
