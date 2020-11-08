@@ -100,7 +100,7 @@ void update_distributions(int total_time) {
 		num_trials_same++;
 		// Update first.
 		double mean = same.mean();
-		mean = (double)(mean*(num_trials_same -1) + ((double)10/total_time))/(num_trials_same);
+		mean = (double)(mean*(num_trials_same -1) + ((double)100/total_time))/(num_trials_same);
 		std::cout << "Mean is " << mean << std::endl;
 		same =  std::normal_distribution<double>(mean, (double)1/num_trials_same); 
 	} else {
@@ -108,7 +108,7 @@ void update_distributions(int total_time) {
 		num_trials_diff++;
 		double mean = different.mean();
 		
-		mean = (double)(mean*(num_trials_diff -1) + ((double)1/total_time))/(num_trials_diff);
+		mean = (double)(mean*(num_trials_diff -1) + ((double)100/total_time))/(num_trials_diff);
 		different = std::normal_distribution<double>(mean, (double)1/num_trials_diff);	
 	}
 
@@ -122,6 +122,7 @@ void update_distributions(int total_time) {
 	} else {
 		curr_mode = 1; 
 	}
-	 
+	threads.clear();
+	cpus.clear();	 
 	std::cout <<  "Current mode: " << curr_mode <<std::endl;
 }

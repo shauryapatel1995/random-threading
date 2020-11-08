@@ -53,10 +53,10 @@ void run_benchmark(int * args) {
     if(func_num == 1) {
 	foo();
     } else if(func_num == 2) {
-	cout << "gups" << endl;
+	// cout << "gups" << endl;
         gups(size);
     } else if(func_num == 3) {
-	cout << "pareto" << endl;
+	// cout << "pareto" << endl;
 	gups_pareto(size);
     } else {
         ackermann(rand() % 4, rand() % 10);
@@ -126,6 +126,7 @@ for(int i = 0; i < 100; i++) {
     // delete(&runtimes);	
     // runtimes = unordered_map<int, workloadUnit *>();
     runtimes.clear();
+    threads.clear();
     cout << "Total time taken is: " << chrono::duration_cast<chrono::milliseconds>(time2 - time1).count() << endl;
     update_distributions( chrono::duration_cast<chrono::milliseconds>(time2 - time1).count());
 }

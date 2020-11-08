@@ -31,7 +31,7 @@ int gups(int size) {
     int data; 
     unsigned long i; 
     unsigned long long index; 
-    unsigned long iters = 10000;
+    unsigned long iters = 1000000;
 	
     
     for(int i = 0; i < iters; i++) {
