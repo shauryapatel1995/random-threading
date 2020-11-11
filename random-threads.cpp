@@ -9,6 +9,8 @@
 
 std::unordered_map<int, pthread_t> threads;
 std::unordered_map<int, int> cpus; 
+std::unordered_map<int, std::normal_distribution<double> > posteriors; 
+std::unordered_map<int, int> num_trials; 
 int id = 0;
 
 /*
@@ -21,8 +23,44 @@ std::default_random_engine generator;
 std::normal_distribution<double> different(1,1);
 int curr_cpu = 0;
 int curr_mode = 1;
+int the_mode = 0;
 int num_trials_same = 0; 
 int num_trials_diff = 0;
+
+/*
+Helper function to generate all trials
+*/
+void generate_trials(int curr, int * possibles, int groups) {
+	std::cout << curr << std::endl;
+	if(curr > 999 && curr < 10000) {
+		posteriors.insert(std::make_pair(curr, std::normal_distribution<double>(1,1)));
+		num_trials.insert(std::make_pair(curr, 0));
+		curr_mode = curr;
+		the_mode = curr; 
+		return;
+	}
+
+	for(int i = 0; i < groups; i++) {
+		generate_trials(curr * 10 + possibles[i], possibles, groups);
+	}
+	
+	
+	return; 
+}
+
+/*
+Generate posterior for all possible actions preregister those posteriors
+*/
+void generate_posteriors(int groups) {
+	std::cout << "Generating posteriors " << groups << std::endl;
+	int * possibles = malloc(sizeof(int) * groups);
+	for(int i = 1; i <= groups; i++) {
+		possibles[i] = i;
+	}
+
+	generate_trials(1, possibles, groups);
+	
+}
 
 /*
     CPU to schedule the thread on.
@@ -32,14 +70,17 @@ int get_cpu_num() {
     // unsigned int a = static_cast<unsigned int>(time(NULL) + id);
     // return rand_r(&a) % 1;
     // Here instead of random we sample from posteriors.
-    if(curr_mode == 0) {
+    /*if(curr_mode == 0) {
 	// same cpu 
 	return curr_cpu;
     } else {
 	// Different cpus. 
 	curr_cpu++;
 	return curr_cpu;
-    }
+    }*/
+	int cpu = curr_mode % 10;
+	curr_mode /= 10;
+	return cpu;
 }
 
 /*
@@ -93,14 +134,14 @@ int getCurrentId() {
     return id - 1; 
 }
 
-void update_distributions(int total_time) {
+/*void update_distributions(int total_time) {
 	std::cout << "Current number of trials: " << num_trials_same << " " << num_trials_diff << std::endl;
 	std::cout << "Current distribution means: " << same.mean() << " " << different.mean() << std::endl;
 	if(curr_mode == 0) {
 		num_trials_same++;
 		// Update first.
 		double mean = same.mean();
-		mean = (double)(mean*(num_trials_same -1) + ((double)100/total_time))/(num_trials_same);
+		mean = (double)(mean*(num_trials_same -1) + ((double)1/total_time))/(num_trials_same);
 		std::cout << "Mean is " << mean << std::endl;
 		same =  std::normal_distribution<double>(mean, (double)1/num_trials_same); 
 	} else {
@@ -108,7 +149,7 @@ void update_distributions(int total_time) {
 		num_trials_diff++;
 		double mean = different.mean();
 		
-		mean = (double)(mean*(num_trials_diff -1) + ((double)100/total_time))/(num_trials_diff);
+		mean = (double)(mean*(num_trials_diff -1) + ((double)1/total_time))/(num_trials_diff);
 		different = std::normal_distribution<double>(mean, (double)1/num_trials_diff);	
 	}
 
@@ -125,4 +166,36 @@ void update_distributions(int total_time) {
 	threads.clear();
 	cpus.clear();	 
 	std::cout <<  "Current mode: " << curr_mode <<std::endl;
+}*/
+
+void update_distributions(int total_time) {
+	std::normal_distribution<double> same = posteriors.at(the_mode);
+	int num_trials_same = num_trials.at(the_mode) + 1;
+	double mean = same.mean();
+        mean = (double)(mean*(num_trials_same -1) + ((double)100/total_time))/(num_trials_same);
+        std::cout << "Mean is " << mean << std::endl;
+        same =  std::normal_distribution<double>(mean, (double)1/num_trials_same); 	
+	posteriors[the_mode] = same; 
+	num_trials[the_mode]++;
+	
+	double max = 0;
+	std::cout << "Printing posteriors" << std::endl;
+	// Update the mode from the new sample now.
+	for(auto m : posteriors) {
+		
+		// std::cout << m.first << std::endl;
+		std::normal_distribution<double> curr_distr = m.second; 
+		double val = curr_distr(generator);
+		if(val > max) {
+			max = val;
+			curr_mode = m.first; 
+			the_mode = m.first; 
+		}
+	}
+
+	
+	std::cout <<  "Current mode: " << curr_mode <<std::endl;	
+	for(auto m : num_trials) {
+		std::cout << "Mode: " << m.first << " " << m.second << std::endl;
+	}
 }

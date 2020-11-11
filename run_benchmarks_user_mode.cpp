@@ -16,6 +16,8 @@ extern int foo();
 extern int getCurrentID();
 extern void update_distributions(int);
 extern int gups_pareto(int);
+extern void generate_posteriors(int groups);
+
 class workloadUnit {
     int func_name; 
     double time_taken;
@@ -87,8 +89,11 @@ int main(int argc, char** argv)
     char* file = argv[1];
     int size_mem = atoi(argv[2]);
     cout << "Size is: " << size_mem << endl;
+
+    generate_posteriors(4);
+
     //create_workload(workload);
-for(int i = 0; i < 100; i++) {
+for(int i = 0; i < 1000; i++) {
     read_workload(workload, file);
 
     cout << "Random workload of size " << workload.size() << " created\n";
