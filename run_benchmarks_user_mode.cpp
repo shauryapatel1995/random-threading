@@ -89,11 +89,11 @@ int main(int argc, char** argv)
     char* file = argv[1];
     int size_mem = atoi(argv[2]);
     cout << "Size is: " << size_mem << endl;
-
+    int runtime = 0;
     generate_posteriors(4);
 
     //create_workload(workload);
-for(int i = 0; i < 1000; i++) {
+for(int i = 0; i < 600; i++) {
     read_workload(workload, file);
 
     cout << "Random workload of size " << workload.size() << " created\n";
@@ -132,7 +132,12 @@ for(int i = 0; i < 1000; i++) {
     // runtimes = unordered_map<int, workloadUnit *>();
     runtimes.clear();
     threads.clear();
-    cout << "Total time taken is: " << chrono::duration_cast<chrono::milliseconds>(time2 - time1).count() << endl;
-    update_distributions( chrono::duration_cast<chrono::milliseconds>(time2 - time1).count());
+    int total_time =  chrono::duration_cast<chrono::milliseconds>(time2 - time1).count();
+    cout << "Total time taken is: " << total_time << endl;
+    update_distributions(total_time);
+    if(i >= 500) 
+	runtime += total_time;
 }
+
+	cout << "Average runtime is: " << (double)runtime / 100 << std::endl;
 }

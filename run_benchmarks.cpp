@@ -9,7 +9,8 @@ using namespace std;
 typedef std::chrono::high_resolution_clock Clock;
 
 // extern void create_workload(list<int>& workload);
-extern void gups(int);
+extern int gups(int);
+extern int gups_pareto(int);
 extern unsigned int ackermann(unsigned int m, unsigned int n);
 extern void foo();
 
@@ -41,7 +42,9 @@ void run_benchmark(int func_num) {
     if(func_num == 1) {
         foo();
     } else if(func_num == 2) {
-        gups(100000);
+        gups(4096000);
+    } else if(func_num == 3) {
+	gups_pareto(4096000);
     } else {
         ackermann(rand() % 4, rand() % 10);
     }
@@ -69,9 +72,11 @@ int main(int argc, char** argv)
     //create_workload(workload);
     read_workload(workload, file);
     cout << "Random workload of size " << workload.size() << " created\n";
+    int running_time = 0;
     auto t1 = Clock::now();    
     // Run this workload
-    cout << "Running workload " << std::endl;
+    // cout << "Running workload " << std::endl;
+for(int i = 0; i < 100; i++) {
     list<thread> threads;
     int size = workload.size();
     for (int i = 0; i < size; i++)
@@ -86,11 +91,14 @@ int main(int argc, char** argv)
 
     
     auto t2 = Clock::now();
+    int total_time = chrono::duration_cast<chrono::milliseconds>(t2 - t1).count();
     cout << "Printing time taken : \n";
     for (auto i : runtimes)
     {
         cout << i.second->getFunc() << " " << i.second->getTime() << "\n";
     }
-
-    cout << "Total time taken: " << chrono::duration_cast<chrono::milliseconds>(t2 - t1).count() << "\n";
+	running_time += total_time;
+    cout << "Total time taken: " << total_time << "\n";
+    }
+	cout << "Running time average: " << (double) running_time / 100 << std::endl;
 }

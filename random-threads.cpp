@@ -6,11 +6,13 @@
 #include <time.h>
 #include <iostream>
 #include <random>
+#include <unordered_set>
 
 std::unordered_map<int, pthread_t> threads;
 std::unordered_map<int, int> cpus; 
 std::unordered_map<int, std::normal_distribution<double> > posteriors; 
-std::unordered_map<int, int> num_trials; 
+std::unordered_map<int, int> num_trials;
+std::unordered_set<int> fingerprints;  
 int id = 0;
 
 /*
@@ -28,15 +30,47 @@ int num_trials_same = 0;
 int num_trials_diff = 0;
 
 /*
+	Check fingerprints of current schedule 
+*/
+bool check_fingerprint(int s) {
+	std::cout << "Generating fingerprint: " << s << std::endl;
+	std::unordered_map<int, int> map;
+	int curr = 0; 
+	int fingerprint = 0;
+	while(s > 0) {
+		int a = s % 10; 
+		s = s/10; 
+		if(map.count(a) > 0) {
+			fingerprint = fingerprint * 10 + map.at(a);
+		} else {
+			map.insert(std::make_pair(a,curr));
+			curr++;
+			fingerprint = fingerprint * 10 + map.at(a);
+		}
+	}
+
+	std::cout << "Checking fingerprint: " << fingerprint << std::endl; 
+	if(fingerprints.count(fingerprint) > 0)
+		return false; 
+	
+	fingerprints.insert(fingerprint);
+	return true;
+	
+}
+
+/*
 Helper function to generate all trials
 */
 void generate_trials(int curr, int * possibles, int groups) {
 	std::cout << curr << std::endl;
 	if(curr > 999 && curr < 10000) {
-		posteriors.insert(std::make_pair(curr, std::normal_distribution<double>(1,1)));
-		num_trials.insert(std::make_pair(curr, 0));
-		curr_mode = curr;
-		the_mode = curr; 
+		if(check_fingerprint(curr)) {
+			posteriors.insert(std::make_pair(curr, std::normal_distribution<double>(1,1)));
+			num_trials.insert(std::make_pair(curr, 0));
+			curr_mode = curr;
+			the_mode = curr; 
+		
+		} 
 		return;
 	}
 
