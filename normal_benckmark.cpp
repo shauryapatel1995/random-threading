@@ -10,7 +10,7 @@
 using namespace std;
 
 int n = 500000;
-std::unordered_map<std::thread::id, double> thread_times;
+// std::unordered_map<std::thread::id, double> thread_times;
 unsigned long out = 0;
 std::mutex mtx;
 
@@ -21,14 +21,14 @@ int foo() {
     unsigned int a = static_cast<unsigned int>(time(NULL));
 
     for(int i = 0; i < n; i++) 
-        arr[i] = rand_r(&a);
+        arr[i] = 0;
 
     for (int i = 0; i < n; i++)
     {
         // something
-	mtx.lock();
+	// mtx.lock();
         out += arr[i];
-	mtx.unlock();
+	// mtx.unlock();
     }
    	
     return out;

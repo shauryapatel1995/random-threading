@@ -14,9 +14,9 @@ typedef std::chrono::high_resolution_clock Clock;
 using namespace std; 
 
 
-unsigned long long get_next_index(int i, int size, std::uniform_int_distribution<int> distr, std::mt19937 generator) {
+/*unsigned long long get_next_index(int i, int size, std::uniform_int_distribution<int> distr, std::mt19937 generator) {
     return distr(generator);
-}
+}*/
 
 int gups_pareto(int size) {
 

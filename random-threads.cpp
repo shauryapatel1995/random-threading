@@ -28,7 +28,6 @@ int curr_mode = 1;
 int the_mode = 0;
 int num_trials_same = 0; 
 int num_trials_diff = 0;
-
 /*
 	Check fingerprints of current schedule 
 */
@@ -117,12 +116,16 @@ int get_cpu_num() {
 	return cpu;
 }
 
+int set_cpus(int cpus) {
+	curr_mode = cpus;
+}
+
 /*
     Just create a pthread here and assign it a processor.
 */
-    int thread_create(void *(*start_routine)(void *), void *arg)
+    int thread_create(void *(*start_routine)(void *), void *arg, int mode)
 {
-	srand(time(NULL));
+    // srand(time(NULL));
     cpu_set_t mask; 
     CPU_ZERO(&mask);
     int cpu = get_cpu_num();
@@ -131,8 +134,8 @@ int get_cpu_num() {
     pthread_t thread;
     int a = pthread_create(&thread, NULL, start_routine, arg);
     
-    
-    pthread_setaffinity_np(thread, sizeof(mask), &mask);
+    if(mode == 1)
+	    pthread_setaffinity_np(thread, sizeof(mask), &mask);
     threads.insert(std::make_pair(id, thread));
     cpus.insert(std::make_pair(thread, cpu));
 

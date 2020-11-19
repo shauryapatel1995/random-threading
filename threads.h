@@ -6,7 +6,7 @@
     Function declaration for thread creation. 
     Eventually should replace pthread_create
 */
-int thread_create(void *(*start_routine)(void *), void *arg);
+int thread_create(void *(*start_routine)(void *), void *arg, int mode);
 
 /*
     Join thread function
@@ -20,5 +20,7 @@ void join_all_threads();
 
 int getCurrentId();
 
-int get_cpu(int id); 
+int get_cpu(int id);
+
+int set_cpus(int cpus); 
 #endif

@@ -66,7 +66,7 @@ void run_benchmark(int * args) {
     auto t2 = Clock::now();
     // cout << "t2 " << std::chrono::system_clock::to_time_t(t2) << endl;
 	
-    // workloadUnit *work = new workloadUnit(func_num, chrono::duration_cast<chrono::milliseconds>(t2 - t1).count(), get_cpu(pthread_self()));
+    workloadUnit *work = new workloadUnit(func_num, chrono::duration_cast<chrono::milliseconds>(t2 - t1).count(), get_cpu(pthread_self()));
     // runtimes.insert(pair<int, workloadUnit *>(pthread_self(), work));
 }
 
@@ -88,24 +88,12 @@ int main(int argc, char** argv)
     // create_workload(workload);
     char* file = argv[1];
     int size_mem = atoi(argv[2]);
-    int cpus = 0;
-    bool train = true;
-    
-    if(argc >= 4) {
-	cpus = atoi(argv[3]);
-	set_cpus(cpus);
-	train = false; 	
-    } else {
-	    generate_posteriors(4);
-    }
-
     cout << "Size is: " << size_mem << endl;
     int runtime = 0;
-    // generate_posteriors(4);
+    generate_posteriors(4);
     double average[4] = {0.0};
-    //create_workload(workload)
-if(train) {
-for(int i = 0; i < 600; i++) {
+    //create_workload(workload);
+for(int i = 0; i < 100; i++) {
     read_workload(workload, file);
 
     cout << "Random workload of size " << workload.size() << " created\n";
@@ -122,7 +110,7 @@ for(int i = 0; i < 600; i++) {
 	int * args = (int *) malloc(sizeof(int)*2);
 	args[0] = work;
 	args[1] = size_mem;	
-        int thread_id = thread_create(run_benchmark, (void *) args,1);
+        int thread_id = thread_create(run_benchmark, (void *) args, 0);
         threads.push_back(thread_id);
         workload.pop_front();
     }
@@ -140,7 +128,7 @@ for(int i = 0; i < 600; i++) {
     for (auto k : runtimes)
     {
         cout << k.first << " " << k.second->getFunc() << " " << k.second->getTime()  << " " << k.second->getCpu() << "\n";
-	if(i >= 500) {
+	if(i >= 0) {
 		average[j] = (double)(average[j] + k.second->getTime());
 		j++;
 	}
@@ -153,7 +141,7 @@ for(int i = 0; i < 600; i++) {
     int total_time =  chrono::duration_cast<chrono::milliseconds>(time2 - time1).count();
     cout << "Total time taken is: " << total_time << endl;
     update_distributions(total_time);
-    if(i >= 500) {
+    if(i >= 0) {
  	runtime += total_time;
 	
 	
@@ -164,48 +152,4 @@ for(int i = 0; i < 600; i++) {
 	for(int j = 0; j < 4; j++) {
 		cout << "Average runtime of thread j is: " << (double)average[j]/100 << endl;
 	}
-} else {
-	for(int i = 0; i < 100; i++) {
-		set_cpus(cpus);
-		read_workload(workload, file);
-
-	    cout << "Random workload of size " << workload.size() << " created\n";
-
-	    // Run this workload
-	    cout << "Running workload" << std::endl;
-	    list<int> threads;
-
-	    auto time1 = Clock::now();
-	    int size = workload.size();
-	    for (int i = 0; i < size; i++)
-	    {
-	        int work = workload.front();
-	        int * args = (int *) malloc(sizeof(int)*2);
-	        args[0] = work;
-       		 args[1] = size_mem;
-	        int thread_id = thread_create(run_benchmark, (void *) args,1);
-	        threads.push_back(thread_id);
-	        workload.pop_front();
-	    }
-
-	    //joinAllThreads();
-	    for(auto t : threads) {
-	        join_thread(t);
-	    }
-
-	    // std::this_thread::sleep_for(10s);
-
-	    auto time2 = Clock::now();
-		runtimes.clear();
-	    threads.clear();
-	    int total_time =  chrono::duration_cast<chrono::milliseconds>(time2 - time1).count();
-	    cout << "Total time taken is: " << total_time << endl;
-	    runtime += total_time;
-
-	}
-
-	cout << "Average runtime is: " << (double)runtime / 100 << std::endl;
-
 }
-}
-

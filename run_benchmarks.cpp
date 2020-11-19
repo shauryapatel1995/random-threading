@@ -34,17 +34,18 @@ class workloadUnit {
 };
 
 unordered_map<std::thread::id, workloadUnit *> runtimes;
-
-void run_benchmark(int func_num) {
-    
+int size = 4096000;
+void run_benchmark(int * args) {
+    int func_num = args[0];
+    int size = args[1];
     auto t1 = Clock::now();
 
     if(func_num == 1) {
         foo();
     } else if(func_num == 2) {
-        gups(4096000);
+        gups(size);
     } else if(func_num == 3) {
-	gups_pareto(4096000);
+	gups_pareto(size);
     } else {
         ackermann(rand() % 4, rand() % 10);
     }
@@ -69,36 +70,55 @@ int main(int argc, char** argv)
     
     list<int> workload;
     char* file = argv[1];
-    //create_workload(workload);
-    read_workload(workload, file);
-    cout << "Random workload of size " << workload.size() << " created\n";
-    int running_time = 0;
-    auto t1 = Clock::now();    
+    int size_mem = atoi(argv[2]);
+    //create_workload(workload)
     // Run this workload
     // cout << "Running workload " << std::endl;
+    double average[4] = {0};
+    double running_time = 0.0;
 for(int i = 0; i < 100; i++) {
-    list<thread> threads;
+ read_workload(workload, file);
+    cout << "Random workload of size " << workload.size() << " created\n";
+    auto t1 = Clock::now();
+
+    list<pthread_t> threads;
     int size = workload.size();
     for (int i = 0; i < size; i++)
     {
         int work = workload.front();
-	threads.push_back(std::thread(run_benchmark, work));
+	// threads.push_back(std::thread(run_benchmark, work));
+	int * args = (int *)malloc(sizeof(int)*2);
+	args[0] = work; 
+	args[1] = size_mem;
+	pthread_t thread;
+	pthread_create(&thread, NULL, run_benchmark, args);
+	threads.push_back(thread);
         workload.pop_front();
     }
 
     for(auto& t : threads)
-        t.join();
+       	pthread_join(t, nullptr);
 
     
     auto t2 = Clock::now();
     int total_time = chrono::duration_cast<chrono::milliseconds>(t2 - t1).count();
     cout << "Printing time taken : \n";
-    for (auto i : runtimes)
+    int j = 0;
+    for (auto k : runtimes)
     {
-        cout << i.second->getFunc() << " " << i.second->getTime() << "\n";
+        cout << k.second->getFunc() << " " << k.second->getTime() << "\n";
+	average[j] = (double)(average[j] + k.second->getTime());
+        j++;
+
     }
-	running_time += total_time;
+    runtimes.clear();
+    threads.clear();
+    running_time += total_time;
     cout << "Total time taken: " << total_time << "\n";
     }
 	cout << "Running time average: " << (double) running_time / 100 << std::endl;
+	for(int j = 0; j < 4; j++) {
+                cout << "Average runtime of thread j is: " << (double) average[j] / 100 << endl;
+        }
+
 }
