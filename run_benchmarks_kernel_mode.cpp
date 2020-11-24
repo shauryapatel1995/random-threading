@@ -48,6 +48,7 @@ unordered_map<int, workloadUnit *> runtimes;
 void run_benchmark(int * args) {
     int func_num = args[0];
     int size = args[1];
+    int ans = 0; 
     auto t1 = Clock::now();
     // cout << "t1 " << std::chrono::system_clock::to_time_t(t1) << endl;
     // cout << "Function is " << func_num << endl;
@@ -56,17 +57,17 @@ void run_benchmark(int * args) {
 	foo();
     } else if(func_num == 2) {
 	// cout << "gups" << endl;
-        gups(size);
+        ans = gups(size);
     } else if(func_num == 3) {
 	// cout << "pareto" << endl;
-	gups_pareto(size);
+	ans = gups_pareto(size);
     } else {
         ackermann(rand() % 4, rand() % 10);
     }
     auto t2 = Clock::now();
     // cout << "t2 " << std::chrono::system_clock::to_time_t(t2) << endl;
 	
-    workloadUnit *work = new workloadUnit(func_num, chrono::duration_cast<chrono::milliseconds>(t2 - t1).count(), get_cpu(pthread_self()));
+    // workloadUnit *work = new workloadUnit(func_num, chrono::duration_cast<chrono::milliseconds>(t2 - t1).count(), get_cpu(pthread_self()));
     // runtimes.insert(pair<int, workloadUnit *>(pthread_self(), work));
 }
 

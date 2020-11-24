@@ -62,7 +62,7 @@ Helper function to generate all trials
 */
 void generate_trials(int curr, int * possibles, int groups) {
 	std::cout << curr << std::endl;
-	if(curr > 999 && curr < 10000) {
+	if(curr > 9999999 && curr < 100000000) {
 		if(check_fingerprint(curr)) {
 			posteriors.insert(std::make_pair(curr, std::normal_distribution<double>(1,1)));
 			num_trials.insert(std::make_pair(curr, 0));
@@ -232,7 +232,23 @@ void update_distributions(int total_time) {
 
 	
 	std::cout <<  "Current mode: " << curr_mode <<std::endl;	
-	for(auto m : num_trials) {
+	/*for(auto m : num_trials) {
 		std::cout << "Mode: " << m.first << " " << m.second << std::endl;
-	}
+	}*/
+}
+
+void print_top_1(){
+	double max_mean = 0.0;
+	int mode = 0;  
+	for(auto m : posteriors) {
+                // std::cout << "Mode: " << m.first << " " << m.second << std::endl;
+		double mean = m.second.mean();
+		int trials = num_trials.at(m.first);
+		if(mean > max_mean) {
+			max_mean = mean; 
+			mode = m.first; 
+		}
+        }
+	
+	std::cout << "Max mean is: " << max_mean << "Mode is: " << mode << std::endl;
 }

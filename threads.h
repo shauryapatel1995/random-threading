@@ -22,5 +22,7 @@ int getCurrentId();
 
 int get_cpu(int id);
 
-int set_cpus(int cpus); 
+int set_cpus(int cpus);
+
+void print_top_1(); 
 #endif

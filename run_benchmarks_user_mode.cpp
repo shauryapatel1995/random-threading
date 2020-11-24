@@ -48,6 +48,7 @@ unordered_map<int, workloadUnit *> runtimes;
 void run_benchmark(int * args) {
     int func_num = args[0];
     int size = args[1];
+    int ans = 0;
     auto t1 = Clock::now();
     // cout << "t1 " << std::chrono::system_clock::to_time_t(t1) << endl;
     // cout << "Function is " << func_num << endl;
@@ -56,10 +57,10 @@ void run_benchmark(int * args) {
 	foo();
     } else if(func_num == 2) {
 	// cout << "gups" << endl;
-        gups(size);
+        ans = gups(size);
     } else if(func_num == 3) {
 	// cout << "pareto" << endl;
-	gups_pareto(size);
+	ans = gups_pareto(size);
     } else {
         ackermann(rand() % 4, rand() % 10);
     }
@@ -105,10 +106,11 @@ int main(int argc, char** argv)
     double average[4] = {0.0};
     //create_workload(workload)
 if(train) {
+cout << "TRAIN!!!" << endl;
 for(int i = 0; i < 600; i++) {
     read_workload(workload, file);
 
-    cout << "Random workload of size " << workload.size() << " created\n";
+    cout << "Train Random workload of size " << workload.size() << " created\n";
     
     // Run this workload
     cout << "Running workload" << std::endl;
@@ -135,8 +137,8 @@ for(int i = 0; i < 600; i++) {
     // std::this_thread::sleep_for(10s);
     
     auto time2 = Clock::now();
-    cout << "\nPrinting time taken : \n";
-    int j = 0;
+    // cout << "\nPrinting time taken : \n";
+    /*int j = 0;
     for (auto k : runtimes)
     {
         cout << k.first << " " << k.second->getFunc() << " " << k.second->getTime()  << " " << k.second->getCpu() << "\n";
@@ -144,8 +146,8 @@ for(int i = 0; i < 600; i++) {
 		average[j] = (double)(average[j] + k.second->getTime());
 		j++;
 	}
-    }
-    
+    } */
+    cout << "BC" << endl;
     // delete(&runtimes);	
     // runtimes = unordered_map<int, workloadUnit *>();
     runtimes.clear();
@@ -156,14 +158,14 @@ for(int i = 0; i < 600; i++) {
     if(i >= 500) {
  	runtime += total_time;
 	
-	
     }
 }
 
 	cout << "Average runtime is: " << (double)runtime / 100 << std::endl;
-	for(int j = 0; j < 4; j++) {
+	print_top_1();
+	/*for(int j = 0; j < 4; j++) {
 		cout << "Average runtime of thread j is: " << (double)average[j]/100 << endl;
-	}
+	}*/
 } else {
 	for(int i = 0; i < 100; i++) {
 		set_cpus(cpus);
