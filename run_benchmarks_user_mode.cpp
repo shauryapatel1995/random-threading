@@ -107,7 +107,7 @@ int main(int argc, char** argv)
     //create_workload(workload)
 if(train) {
 cout << "TRAIN!!!" << endl;
-for(int i = 0; i < 600; i++) {
+for(int i = 0;; i++) {
     read_workload(workload, file);
 
     cout << "Train Random workload of size " << workload.size() << " created\n";

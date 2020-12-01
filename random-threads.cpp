@@ -12,9 +12,10 @@ std::unordered_map<int, pthread_t> threads;
 std::unordered_map<int, int> cpus; 
 std::unordered_map<int, std::normal_distribution<double> > posteriors; 
 std::unordered_map<int, int> num_trials;
-std::unordered_set<int> fingerprints;  
+std::unordered_set<int> fingerprints;
+std::geometric_distribution<int> d;
 int id = 0;
-
+int sample = 0;
 /*
     Needs to perform Thompson sampling.
     Lets focus on how to implement that. 
@@ -28,6 +29,7 @@ int curr_mode = 1;
 int the_mode = 0;
 int num_trials_same = 0; 
 int num_trials_diff = 0;
+double running_best = 1000.0;
 /*
 	Check fingerprints of current schedule 
 */
@@ -77,7 +79,7 @@ void generate_trials(int curr, int * possibles, int groups) {
 		generate_trials(curr * 10 + possibles[i], possibles, groups);
 	}
 	
-	
+	sample = d(generator);
 	return; 
 }
 
@@ -204,8 +206,31 @@ int getCurrentId() {
 	cpus.clear();	 
 	std::cout <<  "Current mode: " << curr_mode <<std::endl;
 }*/
+void remove_distributions() {
+        for(auto it = posteriors.begin(); it != posteriors.end(); ) {
+
+                double mean = it->second.mean();
+                int trials = num_trials.at(it->first);
+
+                if(((double)100/mean > (running_best + 20)) && trials >= 1) {
+			std::cout << "Deleting";
+                        num_trials.erase(it->first);
+                        posteriors.erase(it++);
+                } else {
+                        ++it;
+                }
+        }
+
+        std::cout << "Current best running mean is: " << running_best << " Size of the action space is: " << posteriors.size() << std::endl;
+
+}
+
 
 void update_distributions(int total_time) {
+	
+	if(running_best > total_time)
+		running_best = total_time;
+	
 	std::normal_distribution<double> same = posteriors.at(the_mode);
 	int num_trials_same = num_trials.at(the_mode) + 1;
 	double mean = same.mean();
@@ -215,6 +240,12 @@ void update_distributions(int total_time) {
 	posteriors[the_mode] = same; 
 	num_trials[the_mode]++;
 	
+	if(sample == 0 && posteriors.size() > 10) {
+		remove_distributions();
+		sample = d(generator);
+	} else {
+		--sample;
+	}	
 	double max = 0;
 	std::cout << "Printing posteriors" << std::endl;
 	// Update the mode from the new sample now.
