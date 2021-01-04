@@ -9,6 +9,10 @@
 int thread_create(void *(*start_routine)(void *), void *arg, int mode);
 
 /*
+    Function to create threads for graph sampler based on threads types.
+*/
+int thread_create(void *(*start_routine)(void *), void *arg, int mode);
+/*
     Join thread function
 */
 void join_thread(int id);
