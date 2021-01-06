@@ -11,10 +11,6 @@ std::vector< std::vector<int>> degradation_graph;
 
 int num_types = 0;
 
-int thread_create(void *(*start_routine)(void *), void *arg, int mode) {
-
-}
-
 // Create and store the threads based on their thread type.
 int thread_create(void *(*start_routine)(void *), void *arg, int thread_type) {
 	// take the threads signature. 
@@ -23,9 +19,11 @@ int thread_create(void *(*start_routine)(void *), void *arg, int thread_type) {
 		threads.at(thread_type).push_back(std::make_pair(start_routine, arg));
 	} else {
 		num_types++;
+		std::cout << "Thread type is: " << thread_type << std::endl;
 		threads.insert(std::make_pair(thread_type, std::vector<std::pair<void *(*)(void *), void *>>()));
 		threads.at(thread_type).push_back(std::make_pair(start_routine, arg));
 	}
+	std::cout << "Finished creating thread" << std::endl;
 	// return the internal thread id. 
 	return 0;
 }
@@ -42,10 +40,14 @@ void create_graph() {
 *	Main Function to run the thread experiments and update the graph weights.
 */
 void run_experiments() {
+	std::cout << "Running experiments: " << num_types << std::endl;
 	// print the types and the pairs for now. 
-	for(int i = 1; i <= num_types; i++) {
-		for(int j = 0; j < threads.at(i).size(); j++) {
-			std::cout << "Function: " << threads.at(i).at(j).first << " args: " << threads.at(i).at(j).second << std::endl;
+	for(auto it : threads) {
+		int key = it.first; 
+	
+		std::cout << key << " - " << std::endl;
+		for(int j = 0; j < it.second.size(); j++) {
+			std::cout << "Function: " << it.second.at(j).first << " args: " << it.second.at(j).second << std::endl;
 		}
 	}
 
