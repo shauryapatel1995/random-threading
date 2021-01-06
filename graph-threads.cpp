@@ -7,9 +7,37 @@ int thread_create(void *(*start_routine)(void *), void *arg, int mode) {
 
 // Create and store the threads based on their thread type.
 int thread_create(void *(*start_routine)(void *), void *arg, int mode, int thread_type) {
-	std::cout << "Yes we got the thread" << std::endl;
+	// take the threads signature. 
+	// store it, in thread type, uniquely. 
 }
 
+/*
+	Creates a graph for the threads with the weights to be the degradations.
+*/
+void create_graph() {
+
+}
+
+
+/*
+*	Main Function to run the thread experiments and update the graph weights.
+*/
+void run_experiments() {
+
+
+}
+
+/*
+*	Schedule a thread using the generated graph weights and the threads scheduled so far. 
+*	This will be maybe a greedy algorithm.
+*/
+void schedule() {
+
+}
+
+/*
+*	Join thread based on ID.
+*/
 void join_thread(int thread_id) {
 
 }
@@ -23,28 +51,8 @@ int getCurrentId() {
 
 }
 
-int get_cpu(int id) {
-
-}
-
-int set_cpus(int cpus){
-
-}
-
 void print_top_1() {
 
 }
-
-void remove_distributions() {
-
-}
-
-void generate_posteriors(int id) {
-
-}
-
-void update_distributions(int id) {
-
-} 
 
 

@@ -1,17 +1,6 @@
 #ifndef randomThreads
 #define randomThreads
-// Expose the sThreads functions needed.
 
-/*
-    Function declaration for thread creation. 
-    Eventually should replace pthread_create
-*/
-int thread_create(void *(*start_routine)(void *), void *arg, int mode);
-
-/*
-    Function to create threads for graph sampler based on threads types.
-*/
-int thread_create(void *(*start_routine)(void *), void *arg, int mode);
 /*
     Join thread function
 */
@@ -22,12 +11,14 @@ void join_thread(int id);
 */
 void join_all_threads();
 
+/*
+*   Get ID of current running thread.
+*/
 int getCurrentId();
 
-int get_cpu(int id);
-
-int set_cpus(int cpus);
-
+/*
+*   Prints the top 1 for posteriors?
+*/
 void print_top_1(); 
-void remove_distributions();
+
 #endif
