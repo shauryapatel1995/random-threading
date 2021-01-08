@@ -16,7 +16,7 @@ extern int gups(int size);
 extern unsigned int ackermann(unsigned int m, unsigned int n);
 extern int foo();
 extern int getCurrentID();
-extern int gups_pareto(int size);
+//extern int gups_pareto(int size);
 
 class workloadUnit
 {
@@ -68,11 +68,11 @@ void run_benchmark(int *args)
         // cout << "gups" << endl;
         ans = gups(size);
     }
-    else if (func_num == 3)
-    {
-        // cout << "pareto" << endl;
-        ans = gups_pareto(size);
-    }
+    // else if (func_num == 3)
+    // {
+    //     // cout << "pareto" << endl;
+    //     ans = gups_pareto(size);
+    // }
     else
     {
         ackermann(rand() % 4, rand() % 10);
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
     //     join_thread(t);
     // }
 
-    // std::this_thread::sleep_for(10s);
+    
 
     auto time2 = Clock::now();
     // cout << "\nPrinting time taken : \n";

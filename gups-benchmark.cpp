@@ -4,10 +4,6 @@
 #include <ctime>
 #include <unistd.h>
 #include <random>
-#include <boost/math/distributions/pareto.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/variate_generator.hpp>
 
 typedef std::chrono::high_resolution_clock Clock;
 
@@ -24,7 +20,7 @@ int gups(int size)
     std::random_device rand_dev;
     std::mt19937 generator(rand_dev());
     std::uniform_int_distribution<> distr(1, size);
-    boost::math::pareto_distribution<> dist(1, 1);
+    // boost::math::pareto_distribution<> dist(1, 1);
     // boost::variate_generator<boost::mt19937&,boost::random::uniform_int_distribution<> > generator(randGen, dist);
     //    cout << "Created distribution of size " << size << endl;
 
