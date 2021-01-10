@@ -132,6 +132,10 @@ void run_experiments()
 	pthread_t pthread1, pthread2;
 
 	// Choose two random numbers. 
+	// Question - What if the thread types are same but runtimes are different?
+	// Question - How do we encode same vs different processors and how do we use these experiments to schedule.
+	// Question - How do we define degradation, do we assign the degradation to the thread with the higher running time because the shorter thread will be hidden by the longer thread?
+	// Question - How do we stack the degradation - suppose that we have 5 threads of type 1, do we add degradation factor for all 5 threads?
 	while(true) {
 		int thread_type1 = thread_types.at(std::rand() % thread_types.size());
 		int thread_type2 = thread_types.at(std::rand() % thread_types.size());
@@ -158,6 +162,8 @@ void run_experiments()
 		auto t2 = Clock::now();
 		double average_runtime = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 		std::cout << "Ran experiment: thread 1: " << thread_type1 << " thread2: " << thread_type2 << " runtime is: " << average_runtime  << std::endl;
+
+		// Update the degradation percentage and the trials. 
 		std::this_thread::sleep_for(std::chrono::seconds(2));
 	}
 	
