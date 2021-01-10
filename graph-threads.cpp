@@ -5,6 +5,7 @@
 #include <chrono>
 #include <thread>
 #include <pthread.h>
+#include <cstdlib>
 
 typedef std::chrono::steady_clock Clock;
 
@@ -58,8 +59,8 @@ void create_graph()
 
 		for (int j = 0; j < thread_types.size(); j++)
 		{
-			degradation_graph.at(i).push_back(std::make_pair(thread_types.at(j), 0.0));
-			trials.at(i).push_back(std::make_pair(thread_types.at(j), 0));
+			degradation_graph.at(thread_types.at(i)).push_back(std::make_pair(thread_types.at(j), 0.0));
+			trials.at(thread_types.at(i)).push_back(std::make_pair(thread_types.at(j), 0));
 		}
 	}
 }
@@ -69,10 +70,11 @@ void create_graph()
 */
 void run_experiments()
 {
+	std::srand(std::time(nullptr)); // use current time as seed for random generator
 	std::cout << "Running experiments: " << num_types << std::endl;
 
 	// Create degradation graph and trial matrix.
-	// create_graph();
+	create_graph();
 
 	// print the types and the pairs for now.
 	for (auto it : threads)
@@ -108,7 +110,7 @@ void run_experiments()
 				auto t2 = Clock::now();
 
 				// update average time of thread_type and add to the map.
-				average_runtime = (average_runtime * (count) + (std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()) / (count + 1));
+				average_runtime = ((average_runtime * (count)) + (std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count())) / (count + 1);
 				++count; 
 			}
 		}
@@ -116,15 +118,50 @@ void run_experiments()
 		experiment_runtimes.insert(std::make_pair(thread_type, average_runtime));
 	}
 
+	// Add the experiment times to calculate the degradation.
 	for(auto it : experiment_runtimes) {
 		std::cout << "Thread type: " << it.first << " average runtime: " << it.second << std::endl;
 	}
 
 	// Run experiments
-	// Experiments flow.
-	// We have threads of n types.
-	// Select two types and select mode of running (same or different processor).
-	// Update degradation based on mode.
+	// Experiment setup
+	cpu_set_t mask;
+	CPU_ZERO(&mask);
+	int cpu = 0;
+	CPU_SET(cpu, &mask);
+	pthread_t pthread1, pthread2;
+
+	// Choose two random numbers. 
+	while(true) {
+		int thread_type1 = thread_types.at(std::rand() % thread_types.size());
+		int thread_type2 = thread_types.at(std::rand() % thread_types.size());
+
+		
+
+		// for now same processors.
+		auto thread_ops1 = threads.at(thread_type1);
+		int thread1 = std::rand() % thread_ops1.size();
+
+		auto thread_ops2 = threads.at(thread_type2);
+		int thread2 = std::rand() % thread_ops2.size();
+
+		auto t1 = Clock::now();
+
+		int a1 = pthread_create(&pthread1, NULL, thread_ops1.at(thread1).first, thread_ops1.at(thread1).second);
+		int a2 = pthread_create(&pthread2, NULL, thread_ops2.at(thread2).first, thread_ops2.at(thread2).second);
+		pthread_setaffinity_np(pthread1, sizeof(mask), &mask);
+		pthread_setaffinity_np(pthread2, sizeof(mask), &mask);
+
+		pthread_join(pthread1, nullptr);
+		pthread_join(pthread2, nullptr);
+		
+		auto t2 = Clock::now();
+		double average_runtime = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+		std::cout << "Ran experiment: thread 1: " << thread_type1 << " thread2: " << thread_type2 << " runtime is: " << average_runtime  << std::endl;
+		std::this_thread::sleep_for(std::chrono::seconds(2));
+	}
+	
+
 }
 
 /*
