@@ -125,17 +125,18 @@ void run_experiments()
 
 	// Run experiments
 	// Experiment setup
-	cpu_set_t mask;
-	CPU_ZERO(&mask);
-	int cpu = 0;
-	CPU_SET(cpu, &mask);
+	cpu_set_t mask1, mask2;
+	
 	pthread_t pthread1, pthread2;
 
 	// Choose two random numbers. 
 	// Question - What if the thread types are same but runtimes are different?
+	// One possible answer - For this case we can sample a subspace from the possible space of threads and then model individual degradations.
 	// Question - How do we encode same vs different processors and how do we use these experiments to schedule.
 	// Question - How do we define degradation, do we assign the degradation to the thread with the higher running time because the shorter thread will be hidden by the longer thread?
+	// Likely answer - Degrdation happens to the longer thread for now because the shorter thread degradation doesn't really matter, but we can also keep global variables and modify them with the time?
 	// Question - How do we stack the degradation - suppose that we have 5 threads of type 1, do we add degradation factor for all 5 threads?
+	// Another good question but maybe can be answered at a later stage?
 	while(true) {
 		int thread_type1 = thread_types.at(std::rand() % thread_types.size());
 		int thread_type2 = thread_types.at(std::rand() % thread_types.size());
@@ -149,19 +150,32 @@ void run_experiments()
 		auto thread_ops2 = threads.at(thread_type2);
 		int thread2 = std::rand() % thread_ops2.size();
 
+		// Set CPU
+		CPU_ZERO(&mask1);
+		CPU_ZERO(&mask2);
+		int cpu1 = 0, cpu2 = 0;
+		int config = std::rand() % 2;
+		
+		if(config == 1)
+			cpu2 = 1;
+		
+		CPU_SET(cpu1, &mask1);
+		CPU_SET(cpu2, &mask2);
+
+
 		auto t1 = Clock::now();
 
 		int a1 = pthread_create(&pthread1, NULL, thread_ops1.at(thread1).first, thread_ops1.at(thread1).second);
 		int a2 = pthread_create(&pthread2, NULL, thread_ops2.at(thread2).first, thread_ops2.at(thread2).second);
-		pthread_setaffinity_np(pthread1, sizeof(mask), &mask);
-		pthread_setaffinity_np(pthread2, sizeof(mask), &mask);
+		pthread_setaffinity_np(pthread1, sizeof(mask1), &mask1);
+		pthread_setaffinity_np(pthread2, sizeof(mask2), &mask2);
 
 		pthread_join(pthread1, nullptr);
 		pthread_join(pthread2, nullptr);
 		
 		auto t2 = Clock::now();
 		double average_runtime = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-		std::cout << "Ran experiment: thread 1: " << thread_type1 << " thread2: " << thread_type2 << " runtime is: " << average_runtime  << std::endl;
+		std::cout << "Ran experiment: thread 1: " << thread_type1 << " thread2: " << thread_type2 << " CPU config: " << config << " runtime is: " << average_runtime  << std::endl;
 
 		// Update the degradation percentage and the trials. 
 		std::this_thread::sleep_for(std::chrono::seconds(2));
