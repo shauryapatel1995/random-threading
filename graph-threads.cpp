@@ -16,7 +16,7 @@ std::unordered_map<int, std::vector<std::pair<void *(*)(void *), void *>>> threa
 std::unordered_map<int, double> experiment_runtimes;
 
 // Degradation graph for threads.
-std::unordered_map<int, std::vector<std::pair<int, double>>> degradation_graph;
+std::unordered_map<int, std::unordered_map<int, double>> degradation_graph;
 
 // num trials.
 std::unordered_map<int, std::vector<std::pair<int, int>>> trials;
@@ -24,6 +24,8 @@ std::unordered_map<int, std::vector<std::pair<int, int>>> trials;
 int num_types = 0;
 
 std::vector<int> thread_types;
+
+std::vector<std::vector<int>> sets;
 
 // Create and store the threads based on their thread type.
 int thread_create(void *(*start_routine)(void *), void *arg, int thread_type)
@@ -54,15 +56,110 @@ void create_graph()
 {
 	for (int i = 0; i < thread_types.size(); i++)
 	{
-		degradation_graph.insert(std::make_pair(thread_types.at(i), std::vector<std::pair<int, double>>()));
+		degradation_graph.insert(std::make_pair(thread_types.at(i), std::unordered_map<int, double>()));
 		trials.insert(std::make_pair(thread_types.at(i), std::vector<std::pair<int, int>>()));
 
 		for (int j = 0; j < thread_types.size(); j++)
 		{
-			degradation_graph.at(thread_types.at(i)).push_back(std::make_pair(thread_types.at(j), 0.0));
+			degradation_graph.at(thread_types.at(i)).insert(std::make_pair(thread_types.at(j), 0.0));
 			trials.at(thread_types.at(i)).push_back(std::make_pair(thread_types.at(j), 0));
 		}
 	}
+}
+
+// Used to construct the graph of execution.
+void construct_graph()
+{
+	// Thread types to schedule.
+	double time = 0;
+	std::vector<int> threads = std::vector<int>();
+	threads.push_back(1);
+	threads.push_back(1);
+	threads.push_back(2);
+	
+	// At each step we might have a few options.
+	// Either schedule with an existing set or schedule in a new set.
+	
+	std::cout << "Starting graph creation" << std::endl;
+	for (int i = 0; i < threads.size(); i++)
+	{
+		int min_set = 0;
+		double min_time = 1000000;
+		for (int j = 0; j < sets.size(); j++)
+		{
+			std::vector<int> current_set = sets.at(j);
+			int index = current_set.at(0);
+			double avg = degradation_graph.at(index).at(threads.at(i));
+			if (min_time > (time + avg))
+			{
+				min_time = time + avg;
+				min_set = j;
+			}
+		}
+
+		double self_time = experiment_runtimes.at(threads.at(i));
+		if (min_time > (time + self_time))
+		{
+			time += self_time;
+			std::vector<int> new_set = std::vector<int>();
+			new_set.push_back(threads.at(i));
+			sets.push_back(new_set);
+		}
+		else
+		{
+			sets.at(min_set).push_back(threads.at(i));
+			time = min_time;
+		}
+	}
+
+	for(int i = 0; i < sets.size(); i++) {
+		auto current_set = sets.at(i);
+		for(int j = 0; j < current_set.size(); j++) {
+			std::cout << current_set.at(j) << " ";
+		}
+		std::cout << std::endl;
+	}
+}
+/*
+*	Schedule a thread using the generated graph weights and the threads scheduled so far. 
+*	This will be maybe a greedy algorithm.
+*/
+void schedule()
+{
+	auto t1 = Clock::now();
+	// Schedule the constructed graph.
+	for (int i = 0; i < sets.size(); i++)
+	{
+		std::vector<int> threads_sched = sets.at(i);
+		std::vector<pthread_t> join;
+		for (int j = 0; j < threads_sched.size(); j++)
+		{
+			pthread_t pthread1;
+			cpu_set_t mask1;
+			auto thread_ops1 = threads.at(threads_sched.at(j));
+			int thread1 = std::rand() % thread_ops1.size();
+
+			// Set CPU
+			CPU_ZERO(&mask1);
+			CPU_SET(0, &mask1);
+
+			int a1 = pthread_create(&pthread1, NULL, thread_ops1.at(thread1).first, thread_ops1.at(thread1).second);
+
+			pthread_setaffinity_np(pthread1, sizeof(mask1), &mask1);
+
+			join.push_back(pthread1);
+		}
+
+		for (int k = 0; k < join.size(); k++)
+		{
+			pthread_t pthread = join.at(k);
+			pthread_join(pthread, nullptr);
+		}
+	}
+
+	auto t2 = Clock::now();
+	double experiment_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+	std::cout << "Experiment time: " << experiment_time << std::endl;
 }
 
 /*
@@ -202,112 +299,39 @@ void run_experiments()
 				pthread_join(pthread2, nullptr);
 
 				auto t2 = Clock::now();
-				double average_runtime = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-				std::cout << "Ran experiment: thread 1: " << thread_type1 << " thread2: " << thread_type2 << " CPU config: " << config << " runtime is: " << average_runtime << std::endl;
+				double experiment_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+				std::cout << "Ran experiment: thread 1: " << thread_type1 << " thread2: " << thread_type2 << " CPU config: " << config << " runtime is: " << experiment_time << std::endl;
 
 				// Update the degradation percentage and the trials.
 				// std::this_thread::sleep_for(std::chrono::seconds(2));
+				double current_time = degradation_graph.at(thread_type1).at(thread_type2);
+				
+				double average_runtime = ((current_time * (i)) + (experiment_time)) / (i + 1);
+				
+				degradation_graph.at(thread_type1)[thread_type2] =  average_runtime;
 			}
+
+
 		}
 	}
 
-	// experiment 1
-	auto t1 = Clock::now();
-	thread_type1 = 2; 
-	thread_type2 = 2;
+	for(auto thread_type : degradation_graph) {
+		auto thread_type1 = thread_type.first; 
+		auto threads2 = thread_type.second;
+		for(auto thread_type2 : threads2) {
+			auto thread_name = thread_type2.first; 
+			auto runtime = thread_type2.second; 
 
-	auto thread_exp1_ops1 = threads.at(thread_type1);
-	int thread1 = std::rand() % thread_exp1_ops1.size();
+			std::cout << "Thread type 1: " << thread_type1 << " Thread type 2: " << thread_name << " Runtime: " << runtime << std::endl;
+		}
+	}
 
-	auto thread_exp1_ops2 = threads.at(thread_type2);
-	int thread2 = std::rand() % thread_exp1_ops2.size();
+	construct_graph();
 
-	// Set CPU
-	CPU_ZERO(&mask1);
-	CPU_ZERO(&mask2);
-	int cpu1 = 0, cpu2 = 0;
-	// For now config is always 0.
-	// int config = std::rand() % 2;
-	int config = 0;
-
-	if (config == 1)
-		cpu2 = 1;
-
-	CPU_SET(cpu1, &mask1);
-	CPU_SET(cpu2, &mask2);
-
-	
-
-	int a1 = pthread_create(&pthread1, NULL, thread_exp1_ops1.at(thread1).first, thread_exp1_ops1.at(thread1).second);
-	pthread_setaffinity_np(pthread1, sizeof(mask1), &mask1);
-	pthread_join(pthread1, nullptr);
-
-	int a2 = pthread_create(&pthread2, NULL, thread_exp1_ops2.at(thread2).first, thread_exp1_ops2.at(thread2).second);
-	pthread_setaffinity_np(pthread2, sizeof(mask2), &mask2);
-	pthread_join(pthread2, nullptr);
-	auto t2 = Clock::now();
-	std::cout << "Experiment 1 witholding runtime: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << std::endl;
-
-	// Experiment 2. 
-	auto t3 = Clock::now();
-	thread_type1 = 2; 
-	thread_type2 = 2;
-	auto thread_exp2_ops1 = threads.at(thread_type1);
-	int thread3 = std::rand() % thread_exp2_ops1.size();
-
-	auto thread_exp2_ops2 = threads.at(thread_type2);
-	int thread4 = std::rand() % thread_exp2_ops2.size();
-
-	// Set CPU
-	CPU_ZERO(&mask1);
-	CPU_ZERO(&mask2);
-	
-	CPU_SET(0, &mask1);
-	CPU_SET(1, &mask2);
-
-	
-
-	int a3 = pthread_create(&pthread1, NULL, thread_exp2_ops1.at(thread3).first, thread_exp2_ops1.at(thread3).second);
-	int a4 = pthread_create(&pthread2, NULL, thread_exp2_ops2.at(thread4).first, thread_exp2_ops2.at(thread4).second);
-	pthread_setaffinity_np(pthread1, sizeof(mask1), &mask1);
-	pthread_setaffinity_np(pthread2, sizeof(mask2), &mask2);
-
-	pthread_join(pthread1, nullptr);
-	pthread_join(pthread2, nullptr);
-
-	
-	auto t4 = Clock::now();
-	std::cout << "Experiment 2 together runtime: " << std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count() << std::endl;
-
-	// Experiment 3.
-	auto t5 = Clock::now();
-	thread_type1 = 2;
-	thread_type2 = 2;
-	auto thread_exp3_ops1 = threads.at(thread_type1);
-	int thread5 = std::rand() % thread_exp3_ops1.size();
-
-	auto thread_exp3_ops2 = threads.at(thread_type2);
-	int thread6 = std::rand() % thread_exp3_ops2.size();
-
-	
-
-	int a5 = pthread_create(&pthread1, NULL, thread_exp3_ops1.at(thread5).first, thread_exp3_ops1.at(thread5).second);
-	int a6 = pthread_create(&pthread2, NULL, thread_exp3_ops2.at(thread6).first, thread_exp2_ops2.at(thread6).second);
-	
-	pthread_join(pthread1, nullptr);
-	pthread_join(pthread2, nullptr);
-
-	auto t6 = Clock::now();
-	std::cout << "Experiment 3 regular runtime: " << std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count() << std::endl;
+	schedule();
 }
 
-/*
-*	Schedule a thread using the generated graph weights and the threads scheduled so far. 
-*	This will be maybe a greedy algorithm.
-*/
-void schedule()
-{
-}
+
 
 /*
 *	Join thread based on ID.

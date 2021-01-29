@@ -14,4 +14,6 @@ void run_experiments();
 *   Schedule threads with constructed degradation graph.
 */
 void schedule(); 
+
+void construct_graph();
 #endif
