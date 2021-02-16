@@ -75,7 +75,7 @@ void run_benchmark(int *args)
     // }
     else
     {
-        ackermann(rand() % 4, rand() % 10);
+        ackermann(2, 6);
     }
     auto t2 = Clock::now();
     // cout << "t2 " << std::chrono::system_clock::to_time_t(t2) << endl;

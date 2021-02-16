@@ -6,6 +6,8 @@
 #include <thread>
 #include <pthread.h>
 #include <cstdlib>
+#include <algorithm>
+#include <optional>
 
 typedef std::chrono::steady_clock Clock;
 
@@ -25,7 +27,8 @@ int num_types = 0;
 
 std::vector<int> thread_types;
 
-std::vector<std::vector<int>> sets;
+std::unordered_map<int ,std::vector<std::vector<int>>> sets;
+std::vector<std::vector<int>> schedule_sets; 
 
 // Create and store the threads based on their thread type.
 int thread_create(void *(*start_routine)(void *), void *arg, int thread_type)
@@ -67,8 +70,27 @@ void create_graph()
 	}
 }
 
+/*
+	Function to check whether two vectors are the same.
+*/
+std::optional<std::vector<int> *> check_set_validity(std::vector<int> * threads, std::vector<int>* set_to_compare) {
+	for(auto thread : *set_to_compare) {
+		auto element = std::find(threads->begin(), threads->end(), thread);
+		if(element != threads->end()) {
+			threads->erase(element);
+		} else {
+			// not found return null.
+			return std::nullopt;
+		}
+	}
+	
+	return threads;
+}
+
 // Used to construct the graph of execution.
-void construct_graph()
+// solver oriented operating systems. 
+// ML and solvers have evolved.
+void construct_sets()
 {
 	// Thread types to schedule.
 	double time = 0;
@@ -76,62 +98,147 @@ void construct_graph()
 	threads.push_back(1);
 	threads.push_back(1);
 	threads.push_back(2);
+	threads.push_back(2);
+	threads.push_back(2);
+	threads.push_back(2);
+	threads.push_back(1);
+	threads.push_back(1);
+	threads.push_back(1);
+	threads.push_back(1);
+	threads.push_back(1);
+	threads.push_back(2);
+	threads.push_back(2);
+	threads.push_back(2);
+	threads.push_back(2);
+	threads.push_back(2);
+
 	
+
 	// At each step we might have a few options.
 	// Either schedule with an existing set or schedule in a new set.
+	// Level 0 of the sets are the threads itself.
+	sets.insert(std::make_pair(1, std::vector<std::vector<int>>()));
+	sets.at(1).push_back(std::vector<int>());
+	sets.at(1).push_back(std::vector<int>());
+	sets.at(1).push_back(std::vector<int>());
+	sets.at(1).at(0).push_back(1);
+	sets.at(1).at(1).push_back(2);
+	sets.at(1).at(2).push_back(3);
+
+	int num_levels = 16; // number of threads at max. 
 	
 	std::cout << "Starting graph creation" << std::endl;
-	for (int i = 0; i < threads.size(); i++)
-	{
-		int min_set = 0;
-		double min_time = 1000000;
-		for (int j = 0; j < sets.size(); j++)
-		{
-			std::vector<int> current_set = sets.at(j);
-			int index = current_set.at(0);
-			double avg = degradation_graph.at(index).at(threads.at(i));
-			if (min_time > (time + avg))
-			{
-				min_time = time + avg;
-				min_set = j;
-			}
-		}
+	// For each level we need to figure something out.
+	for(int i = 2; i <= num_levels; i++) {
+		for(auto j : thread_types) {
+			auto level_sets = sets.at(i - 1);
+			for(auto thread_set : level_sets) {
+				// For each set calculate if a new set should be added. 
+				// Check degradation wrt each thread. Take current vector. Add current thread type to it.
+				bool new_set = true; 
+				for(auto t : thread_set) {
+					// Check degradation wrt to each thread. 
+					if(!(experiment_runtimes.at(t) + experiment_runtimes.at(j) > degradation_graph.at(t).at(j))) {
+						new_set = false; 
+						break;
+					}
+				}
 
-		double self_time = experiment_runtimes.at(threads.at(i));
-		if (min_time > (time + self_time))
-		{
-			time += self_time;
-			std::vector<int> new_set = std::vector<int>();
-			new_set.push_back(threads.at(i));
-			sets.push_back(new_set);
-		}
-		else
-		{
-			sets.at(min_set).push_back(threads.at(i));
-			time = min_time;
+				if(new_set) {
+					std::vector<int> set_to_add = std::vector<int>(thread_set);
+					set_to_add.push_back(j);
+					if(sets.count(i) > 0) {
+						sets.at(i).push_back(set_to_add);
+					} else {
+						sets.insert(std::make_pair(i, std::vector<std::vector<int>>()));
+						sets.at(i).push_back(set_to_add);
+					}
+				} 
+			}
 		}
 	}
 
-	for(int i = 0; i < sets.size(); i++) {
-		auto current_set = sets.at(i);
-		for(int j = 0; j < current_set.size(); j++) {
-			std::cout << current_set.at(j) << " ";
+	// for(int i = 1; i <= num_levels; i++) {
+	// 	auto print_set = sets.at(i);
+	// 	for(auto thread_set : print_set ) {
+	// 		for(auto t : thread_set) {
+	// 			std::cout << t << " ";
+	// 		}
+	// 		std::cout << ", ";
+	// 	}
+	// 	std::cout << std::endl;
+	// }
+
+	// Construct schedule sets from total sets.
+	// Look at last level try to find set otherwise try to find nearest sets in previous level?
+	// This can be done using LP.
+	// This can also be done by creating a finite automata of sorts.
+
+	
+	// Let's do this naively for now. 
+	// Just check each set for however much it matches. The set has to match perfectly.
+	while (threads.size() > 0)
+	{
+
+		for (int i = num_levels; i > 0 && !threads.size() == 0; i--)
+		{
+			if (threads.size() < i)
+			{
+				continue;
+			}
+
+			std::cout << threads.size() << " " << i << std::endl;
+			std::vector<std::vector<int>> sets_this_level;
+			if (sets.count(i) > 0)
+			{
+				sets_this_level = sets.at(i);
+			}
+			else
+			{
+				continue;
+			}
+
+			
+
+			for (auto level_set : sets_this_level)
+			{
+				auto new_threads = check_set_validity(new std::vector<int>(threads), &level_set);
+				if (new_threads.has_value())
+				{
+					// update threads.
+					threads.clear();
+					threads.swap(*(*new_threads));
+					schedule_sets.push_back(level_set);
+				}
+
+				if (threads.size() < i)
+				{
+					break;
+				}
+			}
+		}
+	}
+
+	std::cout << "Generated sets: " << std::endl;
+
+	for(int i = 0; i < schedule_sets.size(); i++) {
+		auto current_set = schedule_sets.at(i);
+		for(auto t : current_set) { 
+			std::cout << t << " ";
 		}
 		std::cout << std::endl;
 	}
+
 }
-/*
-*	Schedule a thread using the generated graph weights and the threads scheduled so far. 
-*	This will be maybe a greedy algorithm.
-*/
-void schedule()
-{
+
+void schedule_pthread() {
 	auto t1 = Clock::now();
 	// Schedule the constructed graph.
-	for (int i = 0; i < sets.size(); i++)
+	std::vector<pthread_t> join;
+	for (int i = 0; i < schedule_sets.size(); i++)
 	{
-		std::vector<int> threads_sched = sets.at(i);
-		std::vector<pthread_t> join;
+		std::vector<int> threads_sched = schedule_sets.at(i);
+		
 		for (int j = 0; j < threads_sched.size(); j++)
 		{
 			pthread_t pthread1;
@@ -150,9 +257,54 @@ void schedule()
 			join.push_back(pthread1);
 		}
 
-		for (int k = 0; k < join.size(); k++)
+		
+	}
+
+	for (int k = 0; k < join.size(); k++)
+	{
+		pthread_t pthread = join.at(k);
+		pthread_join(pthread, nullptr);
+	}
+
+	auto t2 = Clock::now();
+	double experiment_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+	std::cout << "Experiment two time: " << experiment_time << std::endl;
+}
+/*
+*	Schedule a thread using the generated graph weights and the threads scheduled so far. 
+*	This will be maybe a greedy algorithm.
+*   TODO - change this to use a Linear programming solver.
+*/
+void schedule()
+{
+	auto t1 = Clock::now();
+	// Schedule the constructed graph.
+	std::vector<pthread_t> join;
+	for (int i = 0; i < schedule_sets.size(); i++)
+	{
+		std::vector<int> threads_sched = schedule_sets.at(i);
+		
+		for (int j = 0; j < threads_sched.size(); j++)
 		{
-			pthread_t pthread = join.at(k);
+			pthread_t pthread1;
+			cpu_set_t mask1;
+			auto thread_ops1 = threads.at(threads_sched.at(j));
+			int thread1 = std::rand() % thread_ops1.size();
+
+			// Set CPU
+			CPU_ZERO(&mask1);
+			CPU_SET(0, &mask1);
+
+			int a1 = pthread_create(&pthread1, NULL, thread_ops1.at(thread1).first, thread_ops1.at(thread1).second);
+
+			pthread_setaffinity_np(pthread1, sizeof(mask1), &mask1);
+
+			join.push_back(pthread1);
+		}
+
+		while(!join.empty())
+		{
+			pthread_t pthread = join.back(); join.pop_back();
 			pthread_join(pthread, nullptr);
 		}
 	}
@@ -160,6 +312,9 @@ void schedule()
 	auto t2 = Clock::now();
 	double experiment_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 	std::cout << "Experiment time: " << experiment_time << std::endl;
+
+	schedule_pthread();
+	
 }
 
 /*
@@ -326,7 +481,7 @@ void run_experiments()
 		}
 	}
 
-	construct_graph();
+	construct_sets();
 
 	schedule();
 }
