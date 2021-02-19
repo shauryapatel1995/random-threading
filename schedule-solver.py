@@ -35,7 +35,9 @@ print('Number of variables =', solver.NumVariables())
 # 1 = 3 and 2 = 2. 
 # we can still have sets as disjoint right?
 # Constraint for three threads of type 1. 
-solver.Add( a + x + y + h + i + 2 * j + 3 * k + 2 * b + 3 * c == 3)
+
+# Formulating this is easy. Each set can have fixed number of given thread types added up to total threads for that type. 
+solver.Add( a + h + i + 2 * j + 3 * k + 2 * b + 3 * c == 3)
 
 # Constraing for two threads of type 2. 
 # e, f, g are {2}, {2}, {2,2}
@@ -44,23 +46,29 @@ solver.Add( e + f + 2 * g + h + 2 * i + j + 2 * k == 2)
 
 # x <= 3.5.
 # Each set can be selected as 0 or 1. 
-solver.Add(a <= 1)
-solver.Add(b <= 1)
-solver.Add(c <= 1)
-solver.Add(x <= 1)
-solver.Add(y <= 1)
-solver.Add(e <= 1)
-solver.Add(f <= 1)
-solver.Add(g <= 1)
-solver.Add(h <= 1)
-solver.Add(i <= 1)
-solver.Add(j <= 1)
-solver.Add(k <= 1)
+# This is trickier. What if we want to use a set more than once? then its value can incerase and that would decrease the number of variables used as well. 
+# But this can be computationally expensive to calculate as well - but what if there is no constraint. The real constraint is just based on the number of threads.
+# for each thread type. So maybe we can get rid of these constraints completely. x and y become repititve because of this because 3 a basically means a + a + a. 
+# That is schedule a sequentially 3 times. 
+# Translating to a schedule might be more difficult for above approach because a = 3 = {{1}, {1}, {1}} - but not that difficult. 
+
+# solver.Add(a <= 1)
+# solver.Add(b <= 1)
+# solver.Add(c <= 1)
+# solver.Add(x <= 1)
+# solver.Add(y <= 1)
+# solver.Add(e <= 1)
+# solver.Add(f <= 1)
+# solver.Add(g <= 1)
+# solver.Add(h <= 1)
+# solver.Add(i <= 1)
+# solver.Add(j <= 1)
+# solver.Add(k <= 1)
 
 print('Number of constraints =', solver.NumConstraints())
 
 # Maximize x + 10 * y.
-solver.Minimize( 5 * a + 5 * x + 5 * y + 8.4 * b + 16 * c + 124 * e + 124 * f + 138 * g + 113 * h + 145 * i + 125 * j + 200 * k)
+solver.Minimize( a + 8.4 * b + 16 * c + 124 * e + 124 * f + 138 * g + 113 * h + 145 * i + 125 * j + 200 * k)
 
 status = solver.Solve()
 
