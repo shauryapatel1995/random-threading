@@ -89,3 +89,12 @@ if status == pywraplp.Solver.OPTIMAL:
     print('k =', k.solution_value())
 else:
     print('The problem does not have an optimal solution.')
+
+
+# How do we optimally determine the weights?
+# One way is that we bound the degrdations using sum of all other threads onto the longest thread for that set 
+# So for example (t1 + t2)*t3 where t3 is time of thread 3. 
+# Another way might be trying to predict the degradation?
+# lets say we have a group of threads -> {1,2,3} => expected vs actual. 
+# This seems to be a regression problem? 
+# Sample random runs and update weights maybe?

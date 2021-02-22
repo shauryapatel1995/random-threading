@@ -10,6 +10,7 @@
 #include <optional>
 
 typedef std::chrono::steady_clock Clock;
+using namespace std::chrono_literals;
 
 // Store all threads by thread_type.
 std::unordered_map<int, std::vector<std::pair<void *(*)(void *), void *>>> threads;
@@ -108,9 +109,9 @@ void construct_sets()
 	threads.push_back(1);
 	threads.push_back(2);
 	threads.push_back(2);
-	threads.push_back(2);
-	threads.push_back(2);
-	threads.push_back(2);
+	threads.push_back(3);
+	threads.push_back(3);
+	threads.push_back(3);
 
 	
 
@@ -177,6 +178,7 @@ void construct_sets()
 	
 	// Let's do this naively for now. 
 	// Just check each set for however much it matches. The set has to match perfectly.
+	// This is just a basic way. 
 	while (threads.size() > 0)
 	{
 
@@ -232,7 +234,8 @@ void construct_sets()
 }
 
 void schedule_pthread() {
-	auto t1 = Clock::now();
+	int counter = 0; 
+	auto t3 = Clock::now();
 	// Schedule the constructed graph.
 	std::vector<pthread_t> join;
 	for (int i = 0; i < schedule_sets.size(); i++)
@@ -241,18 +244,19 @@ void schedule_pthread() {
 		
 		for (int j = 0; j < threads_sched.size(); j++)
 		{
+			++counter; 
 			pthread_t pthread1;
 			cpu_set_t mask1;
 			auto thread_ops1 = threads.at(threads_sched.at(j));
 			int thread1 = std::rand() % thread_ops1.size();
 
-			// Set CPU
-			CPU_ZERO(&mask1);
-			CPU_SET(0, &mask1);
+			// // Set CPU
+			// CPU_ZERO(&mask1);
+			// CPU_SET(0, &mask1);
 
 			int a1 = pthread_create(&pthread1, NULL, thread_ops1.at(thread1).first, thread_ops1.at(thread1).second);
 
-			pthread_setaffinity_np(pthread1, sizeof(mask1), &mask1);
+			// pthread_setaffinity_np(pthread1, sizeof(mask1), &mask1);
 
 			join.push_back(pthread1);
 		}
@@ -266,9 +270,9 @@ void schedule_pthread() {
 		pthread_join(pthread, nullptr);
 	}
 
-	auto t2 = Clock::now();
-	double experiment_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-	std::cout << "Experiment two time: " << experiment_time << std::endl;
+	auto t4 = Clock::now();
+	double experiment_time = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
+	std::cout << "Experiment two time: " << experiment_time << " Counter is: " << counter << std::endl;
 }
 /*
 *	Schedule a thread using the generated graph weights and the threads scheduled so far. 
@@ -277,15 +281,17 @@ void schedule_pthread() {
 */
 void schedule()
 {
+	int counter = 0; 
 	auto t1 = Clock::now();
 	// Schedule the constructed graph.
 	std::vector<pthread_t> join;
 	for (int i = 0; i < schedule_sets.size(); i++)
 	{
 		std::vector<int> threads_sched = schedule_sets.at(i);
-		
+
 		for (int j = 0; j < threads_sched.size(); j++)
 		{
+			++counter; 
 			pthread_t pthread1;
 			cpu_set_t mask1;
 			auto thread_ops1 = threads.at(threads_sched.at(j));
@@ -302,19 +308,20 @@ void schedule()
 			join.push_back(pthread1);
 		}
 
-		while(!join.empty())
+		for (int k = 0; k < join.size(); k++)
 		{
-			pthread_t pthread = join.back(); join.pop_back();
+			pthread_t pthread = join.at(k);
 			pthread_join(pthread, nullptr);
 		}
+
+		join.clear();
 	}
+
+	
 
 	auto t2 = Clock::now();
 	double experiment_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-	std::cout << "Experiment time: " << experiment_time << std::endl;
-
-	schedule_pthread();
-	
+	std::cout << "Experiment time: " << experiment_time<< " Counter is : " << counter << std::endl;
 }
 
 /*
@@ -483,7 +490,16 @@ void run_experiments()
 
 	construct_sets();
 
+	// Maybe something about warmup of caches.
+	schedule_pthread();
+
+	std::this_thread::sleep_for(2s);
+
 	schedule();
+
+	std::this_thread::sleep_for(2s);
+
+	schedule_pthread();
 }
 
 
